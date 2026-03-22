@@ -31,7 +31,7 @@ app.use((err, req, res, next) => {
   return res.status(500).json({ message: 'Internal server error' });
 });
 
-const PORT = process.env.PORT || 5004;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Payment Service running on http://localhost:${PORT}`);
 });
