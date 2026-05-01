@@ -54,6 +54,40 @@ jobs:
           else
             echo "No tests configured, skipping"
           fi
+
+      # Validate required deployment secrets
+      - name: Validate required secrets
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          CLIENT_ORIGIN: ${{ secrets.CLIENT_ORIGIN }}
+          INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
+          ORDER_SERVICE_URL: ${{ secrets.ORDER_SERVICE_URL }}
+        run: |
+          required=(
+            "DOCKER_USERNAME"
+            "DOCKER_PASSWORD"
+            "SERVER_IP"
+            "SSH_PRIVATE_KEY"
+            "MONGO_URI"
+            "JWT_SECRET"
+            "CLIENT_ORIGIN"
+            "INTERNAL_API_KEY"
+            "ORDER_SERVICE_URL"
+          )
+
+          for key in "${required[@]}"; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing required secret: ${key}"
+              exit 1
+            fi
+          done
+
+          echo "All required deployment secrets are present."
       
       # Login to Docker Hub
       - name: Login to Docker Hub
@@ -97,4 +131,20 @@ jobs:
               -e ORDER_SERVICE_URL='${{ secrets.ORDER_SERVICE_URL }}' \
               -e NODE_ENV=production \
               ${{ secrets.DOCKER_USERNAME }}/payment-service-ctse:latest
+
+            for i in {1..15}; do
+              if curl -fsS http://localhost:5004/health >/dev/null; then
+                echo "Health check passed."
+                break
+              fi
+
+              if [ "$i" -eq 15 ]; then
+                echo "Health check failed after deployment."
+                docker logs --tail 100 payment-service || true
+                exit 1
+              fi
+
+              sleep 2
+            done
+
             echo "Deployment complete!"
