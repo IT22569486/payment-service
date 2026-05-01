@@ -84,5 +84,17 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/payment-service-ctse:latest
             docker stop payment-service || true
             docker rm payment-service || true
-            docker run -d -p 80:5004 -p 5004:5004 --name payment-service --restart always ${{ secrets.DOCKER_USERNAME }}/payment-service-ctse:latest
+            docker run -d \
+              -p 80:5004 \
+              -p 5004:5004 \
+              --name payment-service \
+              --restart always \
+              -e PORT=5004 \
+              -e MONGO_URI='${{ secrets.MONGO_URI }}' \
+              -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+              -e CLIENT_ORIGIN='${{ secrets.CLIENT_ORIGIN }}' \
+              -e INTERNAL_API_KEY='${{ secrets.INTERNAL_API_KEY }}' \
+              -e ORDER_SERVICE_URL='${{ secrets.ORDER_SERVICE_URL }}' \
+              -e NODE_ENV=production \
+              ${{ secrets.DOCKER_USERNAME }}/payment-service-ctse:latest
             echo "Deployment complete!"
