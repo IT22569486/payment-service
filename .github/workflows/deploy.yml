@@ -84,5 +84,5 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/payment-service-ctse:latest
             docker stop payment-service || true
             docker rm payment-service || true
-            docker run -d -p 3003:3000 --name payment-service --restart always ${{ secrets.DOCKER_USERNAME }}/payment-service-ctse:latest
+            docker run -d -p 5004:5004 --name payment-service --restart always ${{ secrets.DOCKER_USERNAME }}/payment-service-ctse:latest
             echo "✅ Deployment complete!"
